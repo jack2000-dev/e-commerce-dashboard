@@ -6,6 +6,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*.load
 
 # Local AI agent/plugin installs
 .agents/
@@ -50,7 +51,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
+.pytest_cache
 
 # IDEs
 .vscode/
@@ -72,3 +73,4 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+tmp/
