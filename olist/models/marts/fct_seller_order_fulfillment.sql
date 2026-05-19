@@ -13,7 +13,8 @@ final as (
       oi.seller_id,
       oi.shipping_limit_date,
       o.order_delivered_carrier_date,
-      case when o.order_delivered_carrier_date <= oi.shipping_limit_date then 1 else 0 end as is_seller_handoff_on_time
+      case when o.order_delivered_carrier_date <= oi.shipping_limit_date then 1 else 0 end as is_seller_handoff_on_time,
+      extract(epoch from (order_delivered_carrier_date - shipping_limit_date)) / 864000.0 as seller_handoff_days
 from order_items oi
 join orders o on oi.order_id = o.order_id
 where o.order_delivered_carrier_date is not null
