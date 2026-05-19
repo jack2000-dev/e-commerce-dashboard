@@ -1,168 +1,202 @@
-# building-workshop-template
+# Olist Logistics Operations Intelligence Dashboard (local)
 
-![HyperbolicTimeChamber_Dragonball](/img/hyperbolic_time_chamber.png)
+>[!NOTE]
+> Disclaimer: This project is for educational proposes. A part of Data Engineer Journal learning. It used [building-workshop-template](https://github.com/jack2000-dev/building-workshop-template) as a scaffolding AI assisted teaching. This project is local-based as of v0.1.0 New polished cloud-based version will build on this project (v0.2.0)
 
-`building-workshop-template` is a reusable learn-by-building workshop for data
-roles. It helps a learner work with an AI mentor to choose a project, assess
-their current level, build the project in milestones, get hints when stuck, and
-finish with structured feedback.
+![Metabase Dashboard](img/2026-05-19_Metabase_Olist_Light@2x.png)
 
-Target roles:
+An end-to-end analytics engineering project built on the Olist Brazilian
+e-commerce dataset. Raw SQLite source data is loaded into Postgres, modeled
+with dbt using a medallion (raw → staging → marts) architecture, tested for
+quality, and served through a Metabase dashboard that simulates near-real-time
+operations monitoring.
 
-- Data engineer
-- Analytics engineer
-- Technical data analyst
+This project was generated and built through the workshop scaffold in
+`AGENT.md` and the `start/`, `before-assessment/`, `problem/`, `solution/`,
+`learning-material/`, `after-assessment/`, and `score/` folders. The workshop
+files remain in the repo for reference; this README documents the project that
+was actually built.
 
-The default stack is `uv`, Python, SQL, DuckDB or Postgres, dbt, pytest, and
-Pandas or Polars, but the AI mentor should always ask before assuming the
-stack.
+## What The Project Does
 
-## What This Template Does
+Operations leaders at a logistics e-commerce company need a trusted dashboard
+to monitor how orders move through fulfillment. The project answers:
 
-This is not a fixed tutorial. It is a scaffold for generating a custom project
-from the learner's goals.
+- How many orders are purchased, shipped, and delivered each day?
+- How long does fulfillment take?
+- Are orders delivered before the estimated delivery date?
+- Are sellers handing orders to carriers before their shipping deadline?
+- How much operational backlog exists, and how much of it is at risk?
+- Which customer or seller regions are associated with delays?
 
-Example learner prompt:
+Because the Olist dataset is historical, "live updates" are simulated by
+loading orders into Postgres in date-based batches.
 
-```text
-I want to learn by building a project for a data engineer or analytics engineer
-role. I have basic skills, I use uv, SQL, Python, and I want to build a solid
-project that I can explain to an interviewer.
-```
-
-The AI mentor should respond by interviewing the learner, running a before
-assessment, generating a project, guiding the build, and scoring the final
-submission.
-
-## How To Use
-
-1. Start a new AI conversation.
-2. Attach or reference `AGENT.md` and `start/SKILL.md`.
-3. Ask the AI mentor to begin the workshop.
-4. Fill out `start/PROJECT_INTAKE.md`.
-5. Complete the before assessment.
-6. Let the AI mentor generate `problem/project-brief.md`.
-7. Build through the milestones in `problem/milestones.md`.
-8. Ask for hints or solutions only when needed.
-9. Complete the after assessment.
-10. Submit the project for scoring with `score/score.md`.
-
-## Recommended First Prompt
+## Architecture
 
 ```text
-Use AGENT.md and start/SKILL.md. Interview me, assess my current level, and
-generate a custom learn-by-building project for my data role goals.
+data/raw/olist.sqlite
+        │
+        │  pgloader (scripts/load_olist.load)
+        ▼
+Postgres  raw  schema  ──►  dbt staging (views, schema: staging)
+                                  │
+                                  ▼
+                            dbt marts (tables, schema: marts)
+                                  │
+                                  ▼
+                            Metabase dashboard
 ```
 
-### Use GitHub's **Use this template** button, then clone the new repo
+- **Raw**: untouched copy of the SQLite tables in Postgres `raw` schema.
+- **Staging**: type-cast, renamed, lightly-filtered views. One model per source.
+- **Marts**: fact, dimension, and daily aggregate tables with business logic.
 
-## Folder Structure
+## Tech Stack
+
+- Python 3.13 with `uv` for environment and dependency management
+- Postgres (local) as the analytics warehouse
+- `pgloader` to copy the SQLite source into Postgres `raw`
+- dbt Core + `dbt-postgres` for transformations and tests
+- pytest for load-script sanity checks
+- Metabase (via Docker Compose) for the dashboard
+- `psycopg2-binary`, `pandas` for Python-side data work
+
+## Repository Layout
 
 ```text
 .
-├── AGENT.md
-├── README.md
-├── start/
-│   ├── AGENT.md
-│   ├── SKILL.md
-│   └── PROJECT_INTAKE.md
-├── before-assessment/
-│   ├── README.md
-│   ├── assessment.md
-│   └── rubric.md
-├── problem/
-│   ├── README.md
-│   ├── project-brief.md
-│   ├── assignment.md
-│   ├── milestones.md
-│   ├── generated-workspace.md
-│   └── submission.md
+├── AGENT.md                      # Workshop teaching contract
+├── README.md                     # This file
+├── ROADMAP_v0.2.0.md             # Cloud-migration plan (next version)
+├── docker-compose.yml            # Metabase service (local dev)
+├── pyproject.toml                # uv / Python deps
+├── data/raw/olist.sqlite         # Source Kaggle dataset
+├── scripts/load_olist.load       # pgloader script: SQLite → Postgres raw
+├── tests/test_load.py            # pytest row-count + table-exists checks
+├── profiling/
+│   ├── source_profile.md         # Pre-modeling profiling notes
+│   └── queries/                  # Profiling SQL per table
+├── olist/                        # dbt project (profile: olist)
+│   ├── dbt_project.yml
+│   ├── models/staging/           # stg_orders, stg_order_items, ...
+│   ├── models/marts/             # fct_*, dim_*, daily_* + schema.yml
+│   └── tests/                    # custom non-negative duration tests
+├── docs/
+│   ├── interview_notes.md        # Talking points for interviews
+│   └── lecture.md
+├── before-assessment/            # Workshop scaffold (kept for reference)
+├── problem/                      # project-brief, milestones, assignment
 ├── solution/
-│   ├── README.md
-│   └── solution-playbook.md
 ├── learning-material/
-│   ├── README.md
-│   ├── data-engineer.md
-│   ├── analytics-engineer.md
-│   └── technical-data-analyst.md
 ├── after-assessment/
-│   ├── README.md
-│   └── assessment.md
 └── score/
-    ├── score.md
-    └── rubric.md
 ```
 
-## Workshop Flow
+## dbt Models
 
-### 1. Start
+### Staging (`olist/models/staging/`)
+`stg_orders`, `stg_order_items`, `stg_customers`, `stg_sellers`, `stg_products`,
+`stg_order_payments`, `stg_product_category_name_translation`.
 
-Use `start/PROJECT_INTAKE.md` to capture the learner's target role, level,
-stack, preferences, time budget, and interview goals.
+Materialized as views in schema `staging`. Casts timestamps, renames to
+snake_case, filters null primary keys. No joins, no aggregation.
 
-### 2. Before Assessment
+### Marts (`olist/models/marts/`)
+Materialized as tables in schema `marts`.
 
-Use `before-assessment/assessment.md` to establish a baseline. The goal is to
-measure starting skill, not to fail the learner.
+| Model | Grain | Purpose |
+|---|---|---|
+| `fct_order_fulfillment` | one row per `order_id` | fulfillment days, on-time delivery flag |
+| `fct_seller_order_fulfillment` | one row per `order_id + seller_id` | seller handoff SLA |
+| `dim_customers` | one row per `customer_id` | customer geography |
+| `dim_sellers` | one row per `seller_id` | seller geography |
+| `dim_products` | one row per `product_id` | category, dimensions |
+| `daily_operations_metrics` | one row per `order_day` | daily purchased / shipped / delivered counts |
+| `daily_backlog_snapshot` | one row per open `order_id` | backlog + at-risk flag |
 
-### 3. Problem
+### Data Quality Tests
 
-The AI mentor fills in `problem/project-brief.md`, `problem/assignment.md`, and
-`problem/milestones.md` based on the intake and assessment.
+- Generic: `not_null` and `unique` on every fact-table primary key
+- Custom singular tests in `olist/tests/`:
+  - `assert_fulfillment_days_nonnegative.sql`
+  - `assert_seller_handoff_days_nonnegative.sql`
+- `accepted_values` test on `order_status` in staging
 
-### 4. Solution
+## Setup
 
-Use `solution/solution-playbook.md` for hints, partial solutions, and full
-solutions only when needed.
+### 1. Prerequisites
+- Python 3.13 with [`uv`](https://docs.astral.sh/uv/) installed
+- A local Postgres server you can connect to (the default load script points at
+  `postgresql://jack2000@localhost:5432/olist` — adjust for your machine)
+- [`pgloader`](https://pgloader.io/) installed
+- Docker (for Metabase via `docker-compose.yml`)
+- The Olist SQLite database from Kaggle placed at `data/raw/olist.sqlite`
+  (and copied or symlinked to `/tmp/olist.sqlite` for the load script and tests)
 
-### 5. Learning Material
+### 2. Install Python dependencies
+```bash
+uv sync
+```
 
-Use the relevant role file in `learning-material/` to support the project. Do
-not turn it into a long lecture. Tie concepts to the current milestone.
+### 3. Load raw data into Postgres
+```bash
+createdb olist        # if it does not exist yet
+pgloader scripts/load_olist.load
+```
 
-### 6. After Assessment
+### 4. Verify the load
+```bash
+uv run pytest tests/test_load.py
+```
 
-Use `after-assessment/assessment.md` after the project is complete. Compare it
-with the before assessment to measure progression.
+### 5. Build dbt models
+Configure your dbt profile (`~/.dbt/profiles.yml`) under the profile name
+`olist`, pointing at the same Postgres database, then:
+```bash
+cd olist
+dbt build
+```
+This runs staging views, mart tables, and every test in one pass.
 
-### 7. Score
+### 6. Start Metabase
+```bash
+docker compose up -d
+```
+Open <http://localhost:3000>, point Metabase at the `marts` schema of the
+`olist` database, and build the dashboard.
 
-Use `score/score.md` and `score/rubric.md` to score the final project,
-explanation, tests, documentation, and interview readiness.
+## The Dashboard
 
-## Mentor Behavior
+The Metabase dashboard **Olist Operations Intelligence** is organized into:
 
-The AI mentor should be adaptive:
+1. **Operations overview** — daily purchased / shipped / delivered counts
+2. **Fulfillment performance** — average fulfillment days over time
+3. **SLA monitoring** — on-time delivery %, seller handoff SLA %
+4. **Backlog monitoring** — total + at-risk backlog
+5. **Regional breakdown** — delays by customer / seller state
 
-- Ask questions before generating the project.
-- Recommend a stack but confirm preferences.
-- Give hints before full solutions.
-- Review every milestone.
-- Ask the learner to explain decisions.
-- Score both the project and the learner's ability to explain it.
+## Known Limitations
 
-## What A Finished Project Should Include
+- `customer_id` is order-scoped, not person-scoped in Olist — repeat-buyer
+  analysis is not possible from this schema.
+- The dataset is historical, so the "near-real-time" experience is simulated
+  by batch-loading orders up to a chosen `batch_date`.
+- 8 delivered orders have null `order_delivered_customer_date` — handled by
+  null filters but flagged as a data-quality anomaly.
+- Metabase is running on H2 storage (dev mode) per `docker-compose.yml`; not
+  suitable for shared use.
+- Postgres connection string is hard-coded in `tests/test_load.py` and
+  `scripts/load_olist.load`. Moves to environment variables in v0.2.0.
 
-- Reproducible setup
-- Working data workflow
-- SQL and Python logic
-- Data quality checks
-- Tests or validation queries
-- Project README
-- Architecture or data flow explanation
-- Interview talking points
-- Known limitations and next steps
+## What's Next
 
-## Customization
-
-To adapt this template:
-
-- Add role-specific learning material.
-- Add project examples in `problem/`.
-- Add stricter rubrics in `score/`.
-- Add more assessment questions for your target interview style.
-- Add local setup instructions for your preferred data tools.
+The v0.2.0 plan is to lift this codebase off the laptop and onto cloud
+infrastructure (managed Postgres + Metabase Cloud) so the dashboard can be
+shared with stakeholders. See [`ROADMAP_v0.2.0.md`](./ROADMAP_v0.2.0.md) for
+the milestones, decisions, and open questions.
 
 ## License
 
-The files in this repository are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
+The files in this repository are licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
