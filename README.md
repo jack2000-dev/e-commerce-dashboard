@@ -1,9 +1,9 @@
 # Olist Logistics Operations Intelligence Dashboard (local)
 
 >[!NOTE]
-> Disclaimer: This project is for educational proposes. A part of Data Engineer Journal learning. It used [building-workshop-template](https://github.com/jack2000-dev/building-workshop-template) as a scaffolding AI assisted teaching. This project is local-based as of v0.1.0 New polished cloud-based version will build on this project (v0.2.0)
+> Disclaimer: This project is for educational proposes. A part of Data Engineer Journal learning. It used [building-workshop-template](https://github.com/jack2000-dev/building-workshop-template) as a scaffolding AI assisted teaching. This project is local-based as of v1 **New polished cloud-based version was built and migrate to [Github Analytics](https://github.com/jack2000-dev/de-project-end-to-end)**
 
-![Metabase Dashboard](img/2026-05-19_Metabase_Olist_Light@2x.png)
+![Metabase Dashboard](<img/2026-05-19_Metabase_Olist_Light@2x.png>)
 
 An end-to-end analytics engineering project built on the Olist Brazilian
 e-commerce dataset. Raw SQLite source data is loaded into Postgres, modeled
